@@ -4,6 +4,7 @@ newLine = '\n'
 space = ' '
 none = ''
 t = '\t'
+r = '\r'
 doubleString = '\"'
 oneString = '\''
 slash = '\\'
@@ -100,6 +101,92 @@ def getMLCLinesCount(array):
         sum += item.count(newLine) + 1
     return sum
 
+def deleteNotInfluenced(text):
+    notInfluenced = [t, r, newLine, space ]
+    for item in notInfluenced:
+        text = text.replace(item, '')
+    return text
+
+def countLLOC(text):
+    text = deleteNotInfluenced(text)
+    result = countJumps(text)
+    result += countFiguresAndEnds(text, result)
+    result += countConditions(text)
+    result += countLoop(text)
+    result += countTry(text)
+    return result
+
+def countConditions(text):
+    conditions = ['if', 'else', 'elseif', '?', ':', 'switch', 'case']
+    return countWords(text, conditions)
+
+def countTry(text):
+    tryCatch = ['try', 'catch', 'finnaly']
+    return countWords(text, tryCatch)
+
+def countWords(text, conditions):
+    result = 0
+    for item in conditions:
+        result += countChar(text, item)
+    return result
+
+def countJumps(text):
+    jump = ['break', 'continue']
+    return countWords(text, jump)
+
+
+
+def countLoop(text):
+    words = ['for', 'foreach', 'while']
+    return countWords(text, words)
+
+def countFiguresAndEnds(text, other ):
+    semi = '};'
+    return text.count(figure ) + text.count(end) - 2 * text.count(semi) - other
+
+def countChar(text, char):
+    lengthText = len(text)
+    lengthChar = len(char)
+    count = 0
+    for i in range(0, lengthText):
+        chars = text[i:i+ lengthChar]
+        if chars == char:
+            count += checkKeyWord(text, i, lengthChar)
+    return count
+
+def checkKeyWord(text, i, length):
+    previousChar = text[i - 1]
+    nextChar = text[i + length]
+    if checkChar(previousChar) and checkChar(nextChar):
+        return 0
+    return 1
+
+def checkChar(char):
+    position = ord(char)
+    return checkUpper(position) or checkLower(position) or checkUnderLine(position) or checkNumber(position)# CheckUnderLine(position)
+
+def inRange(position, start, end):
+    return position >= start and position <= end
+
+def checkUpper(position):
+    startUpper = 65
+    endUpper = 90
+    return inRange(position, startUpper, endUpper)
+
+def checkLower(position):
+    startLower = 97
+    endLower = 122
+    return inRange(position, startLower, endLower)
+
+def checkUnderLine(position):
+    underline = 95
+    return position == underline
+
+def checkNumber(position):
+    start = 48
+    end = 57
+    return inRange(position, start, end)
+
 def Program(fileName):
     s = getText(fileName)
     count = s.count(newLine) + 1
@@ -127,7 +214,7 @@ def Program(fileName):
 
 
     PLOC = s.count(newLine) + 1
-    LLOC = s.count(figure ) + s.count(end)
+    LLOC = countLLOC(s)
 
 
     print('LOC: ' + str(count) + ', comments: ' + str(commentsCount) +', LLOC: ' + str(LLOC) + ', PLOC: ' + str(PLOC))
